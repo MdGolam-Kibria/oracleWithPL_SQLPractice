@@ -99,7 +99,7 @@ public class StudentServiceImpl implements StudentService {
         String trx_xml = "<statement>";
         trx_xml = trx_xml + "<rowrecord>";
         trx_xml = trx_xml + "<STUDENT_ID>" + 5 + "</STUDENT_ID>";
-        trx_xml = trx_xml + "<STUDENT_NAME>" + "Kibria" + "</STUDENT_NAME>";
+        trx_xml = trx_xml + "<STUDENT_NAME>" + "manik khan" + "</STUDENT_NAME>";
         trx_xml = trx_xml + "<STUDENT_EMAIL>" + "Kibria@gmail.com" + "</STUDENT_EMAIL>";
         trx_xml = trx_xml + "</rowrecord>";
         trx_xml = trx_xml + "</statement>";
@@ -119,39 +119,49 @@ public class StudentServiceImpl implements StudentService {
         // PL/SQL procedure below
         String procedure = """
                 create procedure saveEmployeeex(
-                        stmt IN CLOB,
-                        output OUT number
-                    ) AS
-                        id_T    EMPLOYEE.ID%TYPE;
-                        name_T  EMPLOYEE.NAME%TYPE;
-                        email_T EMPLOYEE.EMAIL%TYPE;
-                        CURSOR field_cursor
-                            IS
-                            SELECT XMLTYPE.EXTRACT(VALUE(a),
-                                                   '/rowrecord/STUDENT_ID/text()').getStringVal(),
-                                   XMLTYPE.EXTRACT(VALUE(a),
-                                                   '/rowrecord/STUDENT_NAME/text()').getStringVal(),
-                                   XMLTYPE.EXTRACT(VALUE(a), '/rowrecord/STUDENT_EMAIL/text()').getStringVal()
-                                
-                            FROM TABLE (
-                                     XMLSEQUENCE(
-                                             XMLTYPE(stmt).EXTRACT('/statement/rowrecord'))) a;
-                    begin
-                                
-                        output := 0;
-                                
-                        open field_cursor;
-                                
-                        LOOP
-                            FETCH field_cursor
-                                INTO id_T,name_T,email_T;
-                            exit when field_cursor%NOTFOUND;
-                        END LOOP;
-                        insert into EMPLOYEE(id, name, email) VALUES (id_T, name_T, email_T);
-                        commit;
-                        output := 1;
-                    END saveEmployeeex;
-                /
+                     stmt IN CLOB,
+                     output OUT number
+                 ) AS
+                     id_T    EMPLOYEE.ID%TYPE;
+                     name_T  EMPLOYEE.NAME%TYPE;
+                     email_T EMPLOYEE.EMAIL%TYPE;
+                     tempRow number;
+                     CURSOR field_cursor
+                         IS
+                         SELECT XMLTYPE.EXTRACT(VALUE(a),
+                                                '/rowrecord/STUDENT_ID/text()').getStringVal(),
+                                XMLTYPE.EXTRACT(VALUE(a),
+                                                '/rowrecord/STUDENT_NAME/text()').getStringVal(),
+                                XMLTYPE.EXTRACT(VALUE(a), '/rowrecord/STUDENT_EMAIL/text()').getStringVal()
+                 
+                         FROM TABLE (
+                                  XMLSEQUENCE(
+                                          XMLTYPE(stmt).EXTRACT('/statement/rowrecord'))) a;
+                 begin
+                 
+                     output := 0;
+                     tempRow:=0;
+                     open field_cursor;
+                 
+                     LOOP
+                         FETCH field_cursor
+                             INTO id_T,name_T,email_T;
+                         exit when field_cursor%NOTFOUND;
+                     END LOOP;
+                     select count(*) into tempRow from EMPLOYEE where ID = id_T;
+                     IF tempRow is not null then
+                         update EMPLOYEE
+                         set EMPLOYEE.ID    = id_T,
+                             EMPLOYEE.NAME  = name_T,
+                             EMPLOYEE.EMAIL =email_T
+                         where ID = id_T;
+                         output := 1;
+                     else
+                         insert into EMPLOYEE(id, name, email) VALUES (id_T, name_T, email_T);
+                         commit;
+                         output := 1;
+                     end if;
+                 END
                 """;
     }
 }
