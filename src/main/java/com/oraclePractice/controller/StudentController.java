@@ -4,6 +4,7 @@ import com.oraclePractice.model.Student;
 import com.oraclePractice.repository.StudentRepository;
 import com.oraclePractice.service.StudentService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -31,8 +32,13 @@ public class StudentController {
     }
 
     @GetMapping("/getAllEmployeeByPackageProcedureCall")
-    public Object getAllEmployeeByPackageProcedureCall(){
+    public Object getAllEmployeeByPackageProcedureCall() {
         return studentService.getAllEmployeeByPackageProcedureCall();
+    }
+
+    @GetMapping("/getAllEmployeeByIDUsingPackageProcedureCall/{id}")
+    public Object getAllEmployeeByIDUsingPackageProcedureCall(@PathVariable("id") Long id) {
+        return studentService.getAllEmployeeByIDUsingPackageProcedureCall(id);
     }
 
 

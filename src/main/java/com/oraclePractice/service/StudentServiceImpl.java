@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.ParameterMode;
 import javax.persistence.PersistenceContext;
 import javax.persistence.StoredProcedureQuery;
+import java.util.List;
 
 @Service("studentService")
 public class StudentServiceImpl implements StudentService {
@@ -94,7 +95,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public Object getAllEmployeeByPackageProcedureCall() {
-        String packageBodyWithProcedureInterface= """
+        String packageBodyWithProcedureInterface = """
                 create PACKAGE getAllEmployeeByPackage AS
                     PROCEDURE getAll(
                         e_disp OUT SYS_REFCURSOR
@@ -115,13 +116,49 @@ public class StudentServiceImpl implements StudentService {
                 /
                 """;
 
-        StoredProcedureQuery query = entityManager.createStoredProcedureQuery("getAllEmployeeByPackage.getAll");
+        StoredProcedureQuery query = entityManager.createStoredProcedureQuery("getAllEmployeeByPackage2.getAll");
         query.registerStoredProcedureParameter(1, Object.class, ParameterMode.REF_CURSOR);
         //now execute the query
         query.execute();
 
         //Get output parameters
         return query.getResultList();
+    }
+
+    @Override
+    public Object getAllEmployeeByIDUsingPackageProcedureCall(Long id) {
+
+        String procedure = """
+                 procedure getEmployeeById(
+                        id_in IN EMPLOYEE.ID%type,
+                        e_disp OUT SYS_REFCURSOR
+                    ) IS
+                        hasEmployee number;
+                    BEGIN
+                        hasEmployee := 0;
+                        SELECT count(*) into hasEmployee from EMPLOYEE where ID = id_in;
+                        IF hasEmployee <> 0 THEN --here <> means !=
+                            OPEN e_disp FOR SELECT * FROM EMPLOYEE WHERE ID = id_in;
+                        ELSE
+                            --return empty SYS_REFCURSOR couse 1=2 not equal always
+                            OPEN e_disp FOR SELECT * FROM EMPLOYEE WHERE 1=2;
+                        END IF;
+                    END getEmployeeById;
+                """;
+        StoredProcedureQuery query = entityManager.createStoredProcedureQuery("getAllEmployeeByPackage2.getEmployeeById");
+        query.registerStoredProcedureParameter(1, Long.class, ParameterMode.IN);
+        query.registerStoredProcedureParameter(2, Object.class, ParameterMode.REF_CURSOR);
+        //set value
+        query.setParameter(1, id);
+        //now execute the query
+        query.execute();
+
+        //Get output parameters
+        List<Object> result = (List<Object>) query.getResultList();
+        if (result.isEmpty()) {
+            return "No Data Found";
+        }
+        return result;
     }
 
 
