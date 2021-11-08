@@ -30,6 +30,12 @@ public class StudentController {
         return studentService.getAllEmployee(Long.parseLong(String.valueOf("5")));
     }
 
+    @GetMapping("/getAllEmployeeByPackageProcedureCall")
+    public Object getAllEmployeeByPackageProcedureCall(){
+        return studentService.getAllEmployeeByPackageProcedureCall();
+    }
+
+
     @GetMapping("saveXmlProcedure")
     public String saveXmlBasedProcedure() {
         studentService.createXmlBasedStudent();

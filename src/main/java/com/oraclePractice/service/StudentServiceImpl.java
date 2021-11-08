@@ -32,7 +32,6 @@ public class StudentServiceImpl implements StudentService {
         query.execute();
 
 
-
         // PL/SQL procedure below
         String procedure = """
                 create PROCEDURE addstudent (
@@ -69,7 +68,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public Object getAllEmployee(Long studentId) {
-         // PL/SQL procedure below
+        // PL/SQL procedure below
         String procedure = """
                 create procedure getEmployeeAll(
                     id IN EMPLOYEE.ID%type,
@@ -91,6 +90,38 @@ public class StudentServiceImpl implements StudentService {
         //Get output parameters
         return query.getResultList();
 
+    }
+
+    @Override
+    public Object getAllEmployeeByPackageProcedureCall() {
+        String packageBodyWithProcedureInterface= """
+                create PACKAGE getAllEmployeeByPackage AS
+                    PROCEDURE getAll(
+                        e_disp OUT SYS_REFCURSOR
+                    );
+                END getAllEmployeeByPackage;
+                /
+                """;
+
+        String packageInterfaceImpl = """
+                create package body getAllEmployeeByPackage as
+                    procedure getAll(
+                        e_disp OUT SYS_REFCURSOR
+                    ) IS
+                    BEGIN
+                        open e_disp for select *  from EMPLOYEE;
+                    END getAll;
+                end getAllEmployeeByPackage;
+                /
+                """;
+
+        StoredProcedureQuery query = entityManager.createStoredProcedureQuery("getAllEmployeeByPackage.getAll");
+        query.registerStoredProcedureParameter(1, Object.class, ParameterMode.REF_CURSOR);
+        //now execute the query
+        query.execute();
+
+        //Get output parameters
+        return query.getResultList();
     }
 
 
