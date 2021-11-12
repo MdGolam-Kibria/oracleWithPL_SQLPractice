@@ -26,7 +26,7 @@ public class StudentController {
         return "ok";
     }
 
-    @GetMapping("getAllEmployee")
+    @GetMapping("/getAllEmployee")
     public Object getAllEmployee() {
         return studentService.getAllEmployee(Long.parseLong(String.valueOf("5")));
     }
@@ -47,6 +47,13 @@ public class StudentController {
         studentService.createXmlBasedStudent();
         return "ok";
     }
+
+    @GetMapping("/getEmployeeAllInsideFunctionCall/{id}")
+    public Object getEmployeeAllInsideFunctionCallPL_SQL(@PathVariable("id") Long id) {
+        return studentService.getEmployeeAllInsideFunctionCall(id);
+
+    }
+
 
     @GetMapping("/getAll")
     public Object getAllStudent() {

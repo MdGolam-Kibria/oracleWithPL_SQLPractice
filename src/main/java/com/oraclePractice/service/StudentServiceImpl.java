@@ -161,6 +161,52 @@ public class StudentServiceImpl implements StudentService {
         return result;
     }
 
+    /**
+      show how to call a function inside a procedure
+     */
+    @Override
+    public Object getEmployeeAllInsideFunctionCall(Long id) {
+        String procedure = """
+                create or replace procedure getEmployeeAllInsideFunctionCall(
+                    empl_idd IN EMPLOYEE.ID%type,
+                    e_disp OUT SYS_REFCURSOR
+                )
+                    is
+                begin
+                    e_disp := getEmployee(empl_idd);--call below function
+                end;
+                /
+                """;
+        String function = """
+                create function getEmployee(
+                    emp_id EMPLOYEE.ID%type
+                ) return SYS_REFCURSOR
+                    is
+                    expectedEmployee SYS_REFCURSOR;
+                begin
+                    open expectedEmployee for select * from EMPLOYEE where ID = emp_id;
+                    if SQL%FOUND then
+                        return expectedEmployee;
+                    end if;
+                    if SQL%NOTFOUND then
+                        open expectedEmployee for select * from EMPLOYEE where 4 = 6;
+                        return expectedEmployee;
+                    end if;
+                    return expectedEmployee;
+                EXCEPTION
+                    WHEN OTHERS THEN
+                        DBMS_OUTPUT.PUT_LINE('EMPLOYEE find error');
+                end;
+                /
+                """;
+        StoredProcedureQuery query = entityManager.createStoredProcedureQuery("getEmployeeAllInsideFunctionCall");
+        query.registerStoredProcedureParameter(1, Long.class, ParameterMode.IN);
+        query.registerStoredProcedureParameter(2, Object.class, ParameterMode.REF_CURSOR);
+        query.setParameter(1, id);
+        query.execute();
+        return query.getResultList();
+    }
+
 
     @Override
     public void createXmlBasedStudent() {
@@ -232,4 +278,6 @@ public class StudentServiceImpl implements StudentService {
                  END
                 """;
     }
+
+
 }
