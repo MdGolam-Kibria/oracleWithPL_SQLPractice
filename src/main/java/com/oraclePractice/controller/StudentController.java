@@ -40,8 +40,11 @@ public class StudentController {
     public Object getAllEmployeeByIDUsingPackageProcedureCall(@PathVariable("id") Long id) {
         return studentService.getAllEmployeeByIDUsingPackageProcedureCall(id);
     }
-
-
+//    Call using view and Sequences
+    @GetMapping("/getPersonByCallingViewAndSequences/{id}")
+    public Object getPersonByCallingViewAndSequences(@PathVariable("id")Long id){
+        return studentService.getPersonByCallingViewAndSequences(id);
+    }
     @GetMapping("saveXmlProcedure")
     public String saveXmlBasedProcedure() {
         studentService.createXmlBasedStudent();

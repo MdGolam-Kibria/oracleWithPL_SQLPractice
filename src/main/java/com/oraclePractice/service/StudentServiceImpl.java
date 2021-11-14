@@ -162,7 +162,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     /**
-      show how to call a function inside a procedure
+     * show how to call a function inside a procedure
      */
     @Override
     public Object getEmployeeAllInsideFunctionCall(Long id) {
@@ -200,6 +200,77 @@ public class StudentServiceImpl implements StudentService {
                 /
                 """;
         StoredProcedureQuery query = entityManager.createStoredProcedureQuery("getEmployeeAllInsideFunctionCall");
+        query.registerStoredProcedureParameter(1, Long.class, ParameterMode.IN);
+        query.registerStoredProcedureParameter(2, Object.class, ParameterMode.REF_CURSOR);
+        query.setParameter(1, id);
+        query.execute();
+        return query.getResultList();
+    }
+
+    @Override
+    public Object getPersonByCallingViewAndSequences(Long id) {
+        String PL_SQL_WORK_Flow = """
+                               //For Create Sequences that will return a unique val
+                               CREATE SEQUENCE IncrementId
+                                   INCREMENT BY 10
+                                   START WITH 10
+                                   MINVALUE 10
+                                   MAXVALUE 100
+                                   CYCLE
+                                   CACHE 2;
+                                   
+                               //Now create 2 relational table using the Sequences
+                               
+                               ##Persons table
+                               CREATE TABLE Persons
+                               (
+                                   PersonID   int,
+                                   Profession varchar(255)
+                               );
+                               ## PersonsProfession table
+                               CREATE TABLE PersonsProfession
+                               (
+                                   PersonID   int,
+                                   Profession varchar(255)
+                               );
+                               // Now Insert data into two table
+                               
+                               insert into PERSONS values (IncrementId.nextval, 'Kibria', 'Golam', 'Tejgaon', 'Dhaka');--IncrementId.nextval call the sequence here
+                               
+                               
+                               INSERT INTO PersonsProfession values (40, 'Teacher');
+                               INSERT INTO PersonsProfession values (50, 'Engineer');
+                               INSERT INTO PersonsProfession values (60, 'Doctor');
+                               
+                              //Now Create a View that that will return a view called PersonDetails
+                              create or REPLACE VIEW PersonDetails
+                              AS
+                              SELECT p.*, pd.*
+                              from PERSONS p
+                                       left join PersonsProfession pd on p.ID = pd.PERSONID
+                              order by p.ID desc;
+                              
+                              
+                              // Now create a procedure that will return result from the view
+                              create or replace procedure getPersonByCallingView(
+                                  id_in IN PERSONS.ID%type,
+                                  e_disp OUT SYS_REFCURSOR
+                              ) IS
+                                  hasPerson number;
+                              BEGIN
+                                  hasPerson := 0;
+                                  SELECT count(*) into hasPerson from PERSONDETAILS pd where pd.ID = id_in;
+                                  IF hasPerson <> 0 THEN --here <> means !=
+                                      OPEN e_disp FOR SELECT * from PERSONDETAILS pd where pd.ID = id_in;
+                                  ELSE
+                                      --return empty SYS_REFCURSOR couse 1=2 not equal always
+                                      OPEN e_disp FOR SELECT * FROM EMPLOYEE WHERE 1 = 2;
+                                  END IF;
+                              END getPersonByCallingView;
+                """;
+
+
+        StoredProcedureQuery query = entityManager.createStoredProcedureQuery("getPersonByCallingView");
         query.registerStoredProcedureParameter(1, Long.class, ParameterMode.IN);
         query.registerStoredProcedureParameter(2, Object.class, ParameterMode.REF_CURSOR);
         query.setParameter(1, id);
